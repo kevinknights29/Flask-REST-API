@@ -1,0 +1,4 @@
+bandit # to leverage vscode bandit extension
+flask
+flask-smorest
+python-dotenv
