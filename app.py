@@ -74,7 +74,7 @@ def get_all_items():
 def get_store(store_id):
     if store_id in db.stores:
         return db.stores[store_id], 200
-    abort(404, message="store not found")
+    abort(404, message="Bad Request. Store not found")
 
 
 @app.get("/item/<string:item_id>")
@@ -82,4 +82,43 @@ def get_item(item_id):
     if item_id in db.items:
         return db.items[item_id], 200
 
-    abort(404, message="item not found")
+    abort(404, message="Bad request. Item not found")
+
+
+@app.delete("/store/<string:store_id>")
+def delete_store(store_id):
+    if store_id in db.stores:
+        del db.stores[store_id]
+        return {"message": "store deleted"}, 200
+
+    abort(404, message="Bad request. Store not found")
+
+
+@app.delete("/item/<string:item_id>")
+def delete_item(item_id):
+    if item_id in db.items:
+        del db.items[item_id]
+        return {"message": "item deleted"}, 200
+
+    abort(404, message="Bad request. Item not found")
+
+
+@app.put("/item/<string:item_id>")
+def update_item(item_id):
+    item_data = request.get_json()
+
+    field_validation = (
+        "price" in item_data and "store_id" in item_data and "name" in item_data
+    )
+    if field_validation is False:
+        abort(
+            400,
+            message="Bad request. Missing required fields (price, store_id, name)",
+        )
+
+    if item_id in db.items:
+        item = {"id": item_id, **item_data}
+        db.items[item_id] = item
+        return {"message": "item updated"}, 200
+
+    abort(404, message="Bad request. Item not found")
