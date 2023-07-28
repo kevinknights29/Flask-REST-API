@@ -26,7 +26,7 @@ def create_store():
     return new_store, 201
 
 
-@app.post("item/")
+@app.post("/item")
 def create_item():
     item_data = request.get_json()
     item_id = uuid.uuid4().hex
