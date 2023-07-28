@@ -36,16 +36,21 @@ def create_item(store_id):
     return {"message": "store not found"}, 404
 
 
+@app.get("/item")
+def get_all_items():
+    return {"items": list(db.items.values())}
+
+
 @app.get("/store/<string:store_id>")
-def get_store(name):
-    if name in db.stores:
-        return db.stores[name], 200
+def get_store(store_id):
+    if store_id in db.stores:
+        return db.stores[store_id], 200
     return {"message": "store not found"}, 404
 
 
-@app.get("/store/<string:name>/item")
-def get_item_in_store(name):
-    for store in db.stores:
-        if store["name"] == name:
-            return {"items": store["items"]}
-        return {"message": "store not found"}, 404
+@app.get("/item/<string:item_id>")
+def get_item(item_id):
+    if item_id in db.items:
+        return db.items[item_id], 200
+
+    return {"message": "item not found"}, 404
