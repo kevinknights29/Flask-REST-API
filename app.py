@@ -44,7 +44,7 @@ def get_all_items():
 def get_store(store_id):
     if store_id in db.stores:
         return db.stores[store_id], 200
-    return abort(404, message="store not found")
+    abort(404, message="store not found")
 
 
 @app.get("/item/<string:item_id>")
@@ -52,4 +52,4 @@ def get_item(item_id):
     if item_id in db.items:
         return db.items[item_id], 200
 
-    return abort(404, message="item not found")
+    abort(404, message="item not found")
