@@ -20,6 +20,17 @@ def get_stores():
 @app.post("/store")
 def create_store():
     store_data = request.get_json()
+
+    field_validation = "name" in store_data
+    if field_validation is False:
+        abort(400, message="Bad request. Missing required field (name)")
+
+    duplicate_validation = store_data["name"] in [
+        store["name"] for store in db.stores.values()
+    ]
+    if duplicate_validation is True:
+        abort(400, message="Bad request. Duplicate store name, store already exists.")
+
     store_id = uuid.uuid4().hex
     new_store = {"id": store_id, **store_data}
     db.stores[store_id] = new_store
@@ -29,6 +40,25 @@ def create_store():
 @app.post("/item")
 def create_item():
     item_data = request.get_json()
+
+    field_validation = (
+        "price" in item_data and "store_id" in item_data and "name" in item_data
+    )
+    if field_validation is False:
+        abort(
+            400,
+            message="Bad request. Missing required fields (price, store_id, name)",
+        )
+
+    duplicate_validation = item_data["name"] in [
+        item["name"] for item in db.items.values()
+    ] and item_data["store_id"] in [store["id"] for store in db.stores.values()]
+    if duplicate_validation is True:
+        abort(
+            400,
+            message="Bad request. Duplicate item name in store, item already exists.",
+        )
+
     item_id = uuid.uuid4().hex
     item = {"id": item_id, **item_data}
     db.items[item_id] = item
