@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import uuid
 
-from flask import request
 from flask.views import MethodView
 from flask_smorest import abort
 from flask_smorest import Blueprint
 
 from src.db import db
+from src.schema import schema
 
 
 blp = Blueprint("item", __name__, url_prefix="/item", description="Item operations")
@@ -18,18 +18,8 @@ class ItemList(MethodView):
     def get(self):
         return {"items": list(db.items.values())}
 
-    def post(self):
-        item_data = request.get_json()
-
-        field_validation = (
-            "price" in item_data and "store_id" in item_data and "name" in item_data
-        )
-        if field_validation is False:
-            abort(
-                400,
-                message="Bad request. Missing required fields (price, store_id, name)",
-            )
-
+    @blp.arguments(schema=schema.ItemSchema)
+    def post(self, item_data):
         duplicate_validation = item_data["name"] in [
             item["name"] for item in db.items.values()
         ] and item_data["store_id"] in [store["id"] for store in db.stores.values()]
@@ -53,18 +43,8 @@ class Item(MethodView):
 
         abort(404, message="Bad request. Item not found")
 
-    def put(self, item_id):
-        item_data = request.get_json()
-
-        field_validation = (
-            "price" in item_data and "store_id" in item_data and "name" in item_data
-        )
-        if field_validation is False:
-            abort(
-                400,
-                message="Bad request. Missing required fields (price, store_id, name)",
-            )
-
+    @blp.arguments(schema=schema.ItemUpdateSchema)
+    def put(self, item_data, item_id):
         if item_id in db.items:
             item = {"id": item_id, **item_data}
             db.items[item_id] = item

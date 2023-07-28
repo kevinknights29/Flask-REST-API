@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import uuid
 
-from flask import request
 from flask.views import MethodView
 from flask_smorest import abort
 from flask_smorest import Blueprint
 
 from src.db import db
+from src.schema import schema
 
 
 blp = Blueprint("store", __name__, url_prefix="/store", description="Store operations")
@@ -18,13 +18,8 @@ class StoreList(MethodView):
     def get(self):
         return {"stores": list(db.stores.values())}
 
-    def post(self):
-        store_data = request.get_json()
-
-        field_validation = store_data["name"] is None or store_data["name"] == ""
-        if field_validation is True:
-            abort(400, message="Bad request. Store name is required.")
-
+    @blp.arguments(schema=schema.StoreSchema)
+    def post(self, store_data):
         duplicate_validation = store_data["name"] in [
             store["name"] for store in db.stores.values()
         ]
