@@ -4,6 +4,7 @@ import uuid
 
 from flask import Flask
 from flask import request
+from flask_smorest import abort
 
 from src.db import db
 
@@ -25,15 +26,13 @@ def create_store():
     return new_store, 201
 
 
-@app.post("/store/<string:store_id>/item")
-def create_item(store_id):
-    if store_id in db.stores:
-        item_data = request.get_json()
-        item_id = uuid.uuid4().hex
-        item = {"id": item_id, **item_data}
-        db.items[item_id] = item
-        return item, 201
-    return {"message": "store not found"}, 404
+@app.post("item/")
+def create_item():
+    item_data = request.get_json()
+    item_id = uuid.uuid4().hex
+    item = {"id": item_id, **item_data}
+    db.items[item_id] = item
+    return item, 201
 
 
 @app.get("/item")
@@ -45,7 +44,7 @@ def get_all_items():
 def get_store(store_id):
     if store_id in db.stores:
         return db.stores[store_id], 200
-    return {"message": "store not found"}, 404
+    return abort(404, message="store not found")
 
 
 @app.get("/item/<string:item_id>")
@@ -53,4 +52,4 @@ def get_item(item_id):
     if item_id in db.items:
         return db.items[item_id], 200
 
-    return {"message": "item not found"}, 404
+    return abort(404, message="item not found")
