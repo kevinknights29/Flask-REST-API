@@ -1,51 +1,51 @@
 from __future__ import annotations
 
+import uuid
+
 from flask import Flask
 from flask import request
+
+from src.db import db
 
 
 app = Flask(__name__)
 
-stores = [
-    {
-        "name": "My Wonderful Store",
-        "items": [
-            {
-                "name": "My Item",
-                "price": 15.99,
-            },
-        ],
-    },
-]
-
 
 @app.get("/store")
 def get_stores():
-    return {"stores": stores}
+    return {"stores": list(db.stores.items())}
 
 
 @app.post("/store")
 def create_store():
-    request_data = request.get_json()
-    new_store = {"name": request_data["name"], "items": []}
-    stores.append(new_store)
-    return {"store": stores[-1]}, 201
+    store_data = request.get_json()
+    store_id = uuid.uuid4().hex
+    new_store = {"id": store_id, **store_data}
+    db.stores[store_id] = new_store
+    return new_store, 201
 
 
-@app.post("/store/<string:name>/item")
-def create_item(name):
-    request_data = request.get_json()
-    for store in stores:
-        if store["name"] == name:
-            new_item = {"name": request_data["name"], "price": request_data["price"]}
-            store["items"].append(new_item)
-            return {"item": new_item}, 201
-        return {"message": "store not found"}, 404
+@app.post("/store/<string:store_id>/item")
+def create_item(store_id):
+    if store_id in db.stores:
+        item_data = request.get_json()
+        item_id = uuid.uuid4().hex
+        item = {"id": item_id, **item_data}
+        db.items[item_id] = item
+        return item, 201
+    return {"message": "store not found"}, 404
+
+
+@app.get("/store/<string:store_id>")
+def get_store(name):
+    if name in db.stores:
+        return db.stores[name], 200
+    return {"message": "store not found"}, 404
 
 
 @app.get("/store/<string:name>/item")
 def get_item_in_store(name):
-    for store in stores:
+    for store in db.stores:
         if store["name"] == name:
             return {"items": store["items"]}
         return {"message": "store not found"}, 404
