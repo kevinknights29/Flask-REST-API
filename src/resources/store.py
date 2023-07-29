@@ -15,10 +15,12 @@ blp = Blueprint("store", __name__, url_prefix="/store", description="Store opera
 
 @blp.route("")
 class StoreList(MethodView):
+    @blp.response(200, schema=schema.StoreSchema(many=True))
     def get(self):
-        return {"stores": list(db.stores.values())}
+        return db.stores.values()
 
     @blp.arguments(schema=schema.StoreSchema)
+    @blp.response(201, schema=schema.StoreSchema)
     def post(self, store_data):
         duplicate_validation = store_data["name"] in [
             store["name"] for store in db.stores.values()
@@ -32,14 +34,15 @@ class StoreList(MethodView):
         store_id = uuid.uuid4().hex
         store = {"id": store_id, **store_data}
         db.stores[store_id] = store
-        return store, 201
+        return store
 
 
 @blp.route("/<string:store_id>")
 class Store(MethodView):
+    @blp.response(200, schema=schema.StoreSchema)
     def get(self, store_id):
         if store_id in db.stores:
-            return db.stores[store_id], 200
+            return db.stores[store_id]
         abort(404, message="Bad Request. Store not found")
 
     def delete(self, store_id):

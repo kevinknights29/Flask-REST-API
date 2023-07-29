@@ -15,10 +15,12 @@ blp = Blueprint("item", __name__, url_prefix="/item", description="Item operatio
 
 @blp.route("")
 class ItemList(MethodView):
+    @blp.response(200, schema=schema.ItemSchema(many=True))
     def get(self):
-        return {"items": list(db.items.values())}
+        return db.items.values()
 
     @blp.arguments(schema=schema.ItemSchema)
+    @blp.response(201, schema=schema.ItemSchema)
     def post(self, item_data):
         duplicate_validation = item_data["name"] in [
             item["name"] for item in db.items.values()
@@ -32,23 +34,25 @@ class ItemList(MethodView):
         item_id = uuid.uuid4().hex
         item = {"id": item_id, **item_data}
         db.items[item_id] = item
-        return item, 201
+        return item
 
 
 @blp.route("/<string:item_id>")
 class Item(MethodView):
+    @blp.response(200, schema=schema.ItemSchema)
     def get(self, item_id):
         if item_id in db.items:
-            return db.items[item_id], 200
+            return db.items[item_id]
 
         abort(404, message="Bad request. Item not found")
 
     @blp.arguments(schema=schema.ItemUpdateSchema)
+    @blp.response(200, schema=schema.ItemSchema)
     def put(self, item_data, item_id):
         if item_id in db.items:
             item = {"id": item_id, **item_data}
             db.items[item_id] = item
-            return {"message": "item updated"}, 200
+            return item
 
         abort(404, message="Bad request. Item not found")
 
